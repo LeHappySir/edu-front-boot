@@ -1,0 +1,186 @@
+server:
+  port: 8010
+  compression:
+    enabled: true
+    mime-types: text/html,text/css,application/json
+    min-response-size: 512
+    tomcat:
+      # 1. Maximum number of connections that the server will accept and process at any time given time
+      # max-connections最好不配置，根据默认的连接器协议HTTP/1.1，tomcat自动探测环境的不同，为本item赋值：BIO时是max-threads，NIO/NIO时是10000，APR/native是8192
+      # 本质上它指的是tomcat可以建立多少个socket连接，注意即时socket已经建立但是如果max-threads是无空闲的，那么任务应该在线程池的队列里
+      # max-connections: 100
+      # 2. Maximum amount of worker threads
+      max-threads: 200
+      # 3. Minimum amount of worker threads
+      min-spare-threads: 100
+      # 4. TCP accept 队列的长度：理论上只要还有worker thread可用它就会是接近为空队列，所以这个配置是说当到达max-threads时还能接受多少请求
+      accept-count: 200
+      # This specifies the character encoding used to decode the URI bytes, after %xx decoding the URL.
+      uri-encoding: UTF-8
+    error:
+      includeStacktrace: ALWAYS
+
+spring:
+  application:
+    name: edu-front-boot
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: edu-config-boot
+      name: ${spring.application.name}
+      profile: dev
+  oauth:
+    client_id: test_client
+    client_secret: test_secret
+    scope: read
+    grant_type: password
+    refresh_grant_type: refresh_token
+  main:
+    allow-bean-definition-overriding: true
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: edu
+    password: edu
+    virtual-host: /edu
+  klock:
+    address: 127.0.0.1:6379
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    timeout: 20000
+    pool:
+      max-active: 8
+      min-idle: 0
+      max-idle: 8
+      max-wait: -1
+    password:
+
+
+#注册到Eureka服务中心
+eureka:
+  client:
+    service-url:
+      # 注册到集群，就把多个Eurekaserver地址使用逗号连接起来即可；注册到单实例（非集群模式），那就写一个就ok
+      defaultZone: http://127.0.0.1:9020/eureka/
+    #eureka client刷新本地缓存时间 默认30s
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true  #服务实例中显示ip，而不是显示主机名（兼容老的eureka版本）
+    # 实例名称
+    instance-id: ${spring.cloud.client.ip-address}:${spring.application.name}:${server.port}
+    #服务过期时间配置,超过这个时间没有接收到心跳EurekaServer就会将这个实例剔除 默认90s
+    lease-expiration-duration-in-seconds: 9
+    #服务刷新时间配置，每隔这个时间会主动心跳一次 默认30s
+    lease-renewal-interval-in-seconds: 3
+
+
+zookeeper:
+  address: 127.0.0.1:2181
+cloud:
+  sentinel:
+    transport:
+      dashboard: localhost:30918
+    eager: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    #启用shutdown端点，以便支持优雅停机
+    shutdown:
+      enabled: true
+
+#分布式链路追踪--调整SpringBoot日志输出级别
+logging:
+  config: classpath:logback.xml
+
+ribbon:
+  ConnectTimeout: 3000 # timeout of connect to server
+  ReadTimeout: 3000 # timeout of read
+  okhttp:
+    enabled: true
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 8000 # 设置thread 和semaphore 两种隔离策略的超时时间，默认1000
+      fallback:
+        isolation:
+          semaphore:
+            maxConcurrentRequests: 500
+
+feign:
+  # Feign 客户端配置，对应 FeignClientProperties 配置属性类
+  client:
+    # config 配置项是 Map 类型。key 为 Feign 客户端的名字，value 为 FeignClientConfiguration 对象
+    config:
+      # 全局级别配置
+      default:
+        logger-level: FULL
+  #        logger-level: BASIC
+  compression:
+    request:
+      enabled: true
+      mime-types: text/xml,application/xml,application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+  okhttp:
+    enabled: true
+  httpclient:
+    enabled: false
+  hystrix:
+    enabled: true
+remote:
+  feign:
+    edu-course-boot:
+      name: edu-course-boot
+edu:
+  swagger:
+    # 是否启用
+    enable: true
+    base:
+      # 扫描的包，多个包使用逗号隔开
+      package: com.lagou.edu
+    contact:
+      email: leo@lagou.com
+      name: leo
+      url: http://edufront.lagou.com
+    description:
+    title: ${spring.application.name} API Documents
+    url: http://edufront.lagou.com
+    version: 0.0.1
+    groupName: edu-front-boot
+    # 自定义参数配置，可配置N个
+    parameter-config:
+      - name: Authorization
+        description: 公共参数, access_token
+        # header, cookie, body, query
+        type: header
+        data-type: String
+        required: false
+        # 测试接口时，自动填充token的值
+        default-value: "access_token"
+
+# knife4j配置
+knife4j:
+  enable: ${edu.swagger.enable}
+  basic:
+    enable: false
+    username: admin
+    password: admin
+
+wx:
+  mp:
+    config:
+      appId:   # （一个公众号的appid）
+      secret:  #（公众号的appsecret）
+      token: edufront   # （接口配置里的Token值）
+      aesKey: EobkgHl1ChHrjnSIjUntW0fuj3k57NQFtDlhV2dg22Q  # （接口配置里的EncodingAESKey值）
