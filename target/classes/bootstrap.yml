@@ -30,6 +30,10 @@ spring:
         service-id: edu-config-boot
       name: ${spring.application.name}
       profile: dev
+    sentinel:
+      transport:
+        dashboard: localhost:30918
+      eager: true
   oauth:
     client_id: test_client
     client_secret: test_secret

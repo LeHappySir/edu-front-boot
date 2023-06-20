@@ -30,6 +30,10 @@ spring:
         service-id: edu-config-boot
       name: ${spring.application.name}
       profile: @profile@
+    sentinel:
+      transport:
+        dashboard: localhost:30918
+      eager: true
   oauth:
     client_id: test_client
     client_secret: test_secret
@@ -78,11 +82,6 @@ eureka:
 
 zookeeper:
   address: 127.0.0.1:2181
-cloud:
-  sentinel:
-    transport:
-      dashboard: localhost:30918
-    eager: true
 
 management:
   endpoints:
